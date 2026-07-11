@@ -1,0 +1,44 @@
+from fastapi import FastAPI
+from fastapi import HTTPException
+from pydantic import BaseModel
+import requests
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"Message": "Meu hub de Games está vivo!"}
+
+class GameResponse(BaseModel):
+    title: str
+    usd_price: float | None
+    image: str | None
+
+
+@app.get("/api/games", response_model=GameResponse)
+def read_games(name: str):
+    # Exemplo de chamada à API externa (substitua pela URL real e headers necessários)
+    url = f"https://www.cheapshark.com/api/1.0/games?title={name}"
+    response = requests.get(url)
+
+    game_data = response.json()
+    if not game_data:
+       raise HTTPException(status_code=404, detail="Game not found.")
+    
+    first_game = game_data[0]  # Pega o primeiro jogo encontrado
+
+    if not first_game["external"]:
+        raise HTTPException(status_code=502, detail="Title is Missing.")
+
+    cleaned_data = {
+        "title": first_game.get("external"),
+        "usd_price": first_game.get("cheapest", None),
+        "image": first_game.get("thumb", None)
+
+    }
+    return cleaned_data
+
+
+
+
+
