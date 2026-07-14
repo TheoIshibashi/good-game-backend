@@ -1,15 +1,9 @@
 from fastapi import FastAPI
 from fastapi import HTTPException
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
 import requests
 
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware, allow_origins=["http://localhost:5173"],
-     allow_methods=["*"], 
-     allow_headers=["*"],
-)
 
 @app.get("/")
 def read_root():
@@ -23,7 +17,6 @@ class GameResponse(BaseModel):
 
 @app.get("/api/games", response_model=GameResponse)
 def read_games(name: str):
-    # Exemplo de chamada à API externa (substitua pela URL real e headers necessários)
     url = f"https://www.cheapshark.com/api/1.0/games?title={name}"
     response = requests.get(url)
 
@@ -31,7 +24,7 @@ def read_games(name: str):
     if not game_data:
        raise HTTPException(status_code=404, detail="Game not found.")
     
-    first_game = game_data[0]  # Pega o primeiro jogo encontrado
+    first_game = game_data[0] 
 
     if not first_game["external"]:
         raise HTTPException(status_code=502, detail="Title is Missing.")
@@ -43,8 +36,3 @@ def read_games(name: str):
 
     }
     return cleaned_data
-
-
-
-
-
